@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This filter provides automatic linking to
- * sections when its name (title) is found inside every Moodle text
+ * This filter provides automatic linking to sections when its name (title)
+ * is found inside every Moodle text
  *
- * @package    filter
- * @subpackage sectionnames
+ * @package    filter_sectionnames
  * @copyright  2017 Matt Davidson
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,15 +26,33 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Section name filtering
+ * Section name filtering.
+ *
+ * @package    filter_sectionnames
+ * @copyright  2017 Matt Davidson
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter_sectionnames extends moodle_text_filter {
     // Trivial-cache - keyed on $cachedcourseid and $cacheduserid.
-    static $sectionslist = null;
-    static $cachedcourseid;
-    static $cacheduserid;
+    /** @var array section list. */
+    public static $sectionslist = null;
 
-    function filter($text, array $options = array()) {
+    /** @var int course id. */
+    public static $cachedcourseid;
+
+    /** @var int userid. */
+    public static $cacheduserid;
+
+    /**
+     * Given an object containing all the necessary data,
+     * (defined by the form in mod_form.php) this function
+     * will update an existing instance with new data.
+     *
+     * @param string $text The text that will be filtered.
+     * @param array $options The standard filter options passed.
+     * @return string Filtered text.
+     */
+    public function filter($text, array $options = array()) {
         global $USER; // Since 2.7 we can finally start using globals in filters.
 
         $coursectx = $this->context->get_course_context(false);
@@ -56,7 +72,7 @@ class filter_sectionnames extends moodle_text_filter {
         }
         self::$cacheduserid = (int)$USER->id;
 
-        /// It may be cached
+        // It may be cached.
 
         if (is_null(self::$sectionslist)) {
             self::$sectionslist = array();
@@ -68,7 +84,7 @@ class filter_sectionnames extends moodle_text_filter {
             $sortedsections = array();
 
             $numsections = course_get_format($courseid)->get_course()->numsections;
-            $section = 1; // Skip the general section 0
+            $section = 1; // Skip the general section 0.
             while ($section <= $numsections) {
                 if ($modinfo->get_section_info($section)->visible) {
                     $sortedsections[] = (object)array(
@@ -87,16 +103,16 @@ class filter_sectionnames extends moodle_text_filter {
             foreach ($sortedsections as $section) {
                 $title = s(trim(strip_tags($section->name)));
                 $currentname = trim($section->name);
-                $entitisedname  = s($currentname);
+                $entname  = s($currentname);
                 // Avoid empty or unlinkable activity names.
                 if (!empty($title)) {
-                    $href_tag_begin = html_writer::start_tag('a',
+                    $hrefopen = html_writer::start_tag('a',
                             array('class' => 'autolink', 'title' => $title,
                                 'href' => $section->url));
-                    self::$sectionslist[$section->id] = new filterobject($currentname, $href_tag_begin, '</a>', false, true);
-                    if ($currentname != $entitisedname) {
+                    self::$sectionslist[$section->id] = new filterobject($currentname, $hrefopen, '</a>', false, true);
+                    if ($currentname != $entname) {
                         // If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545.
-                        self::$sectionslist[$section->id.'-e'] = new filterobject($entitisedname, $href_tag_begin, '</a>', false, true);
+                        self::$sectionslist[$section->id.'-e'] = new filterobject($entname, $hrefopen, '</a>', false, true);
                     }
                 }
             }
@@ -106,7 +122,7 @@ class filter_sectionnames extends moodle_text_filter {
         if (self::$sectionslist) {
             $sectionid = $this->context->instanceid;
             if ($this->context->contextlevel == CONTEXT_MODULE && isset(self::$sectionslist[$sectionid])) {
-                // remove filterobjects for the current module
+                // Remove filterobjects for the current module.
                 $filterslist = array_values(array_diff_key(self::$sectionslist, array($sectionid => 1, $sectionid.'-e' => 1)));
             } else {
                 $filterslist = array_values(self::$sectionslist);

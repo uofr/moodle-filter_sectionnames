@@ -22,10 +22,16 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ *
+ * Set the default to on.
+ *
+ */
 function xmldb_filter_sectionnames_install() {
     global $CFG;
     require_once("$CFG->libdir/filterlib.php");
 
     filter_set_global_state('sectionnames', TEXTFILTER_ON, 1);
 }
-
