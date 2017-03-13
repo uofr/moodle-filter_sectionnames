@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * Automatically links section names in a Moodle course and its activities
+ * 
  * This filter provides automatic linking to sections when its name (title)
  * is found inside every Moodle text
  *
