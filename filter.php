@@ -55,7 +55,7 @@ class filter_sectionnames extends moodle_text_filter {
      * @return string Filtered text.
      */
     public function filter($text, array $options = array()) {
-        global $USER; // Since 2.7 we can finally start using globals in filters.
+        global $CFG, $USER; // Since 2.7 we can finally start using globals in filters.
 
         $coursectx = $this->context->get_course_context(false);
         if (!$coursectx) {
@@ -85,7 +85,12 @@ class filter_sectionnames extends moodle_text_filter {
             // Create array of visible sections sorted by the name length (we are only interested in properties name and url).
             $sortedsections = array();
 
-            $numsections = course_get_format($courseid)->get_course()->numsections;
+            if ($CFG->branch < 33) {
+                $numsections = course_get_format($courseid)->get_course()->numsections;    
+            } else {
+                $numsections = course_get_format($courseid)->get_last_section_number();
+            }
+
             $section = 1; // Skip the general section 0.
             while ($section <= $numsections) {
                 if ($modinfo->get_section_info($section)->visible) {
