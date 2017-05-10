@@ -86,7 +86,7 @@ class filter_sectionnames extends moodle_text_filter {
             $sortedsections = array();
 
             if ($CFG->branch < 33) {
-                $numsections = course_get_format($courseid)->get_course()->numsections;    
+                $numsections = course_get_format($courseid)->get_course()->numsections;
             } else {
                 $numsections = course_get_format($courseid)->get_last_section_number();
             }
