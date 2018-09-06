@@ -93,13 +93,15 @@ class filter_sectionnames extends moodle_text_filter {
 
             $section = 1; // Skip the general section 0.
             while ($section <= $numsections) {
-                if ($modinfo->get_section_info($section)->visible) {
-                    $sortedsections[] = (object)array(
-                        'name' => get_section_name($courseid, $section),
-                        'url' => course_get_url($courseid, $section),
-                        'id' => $section,
-                        'namelen' => -strlen(get_section_name($courseid, $section)), // Negative value for reverse sorting.
-                    );
+                if (!empty(($modinfo->get_section_info($section)))) {
+                    if ($modinfo->get_section_info($section)->visible) {
+                        $sortedsections[] = (object)array(
+                            'name' => get_section_name($courseid, $section),
+                            'url' => course_get_url($courseid, $section),
+                            'id' => $section,
+                            'namelen' => -strlen(get_section_name($courseid, $section)), // Negative value for reverse sorting.
+                        );
+                    }
                 }
                 $section++;
             }
