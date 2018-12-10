@@ -56,6 +56,7 @@ class filter_sectionnames extends moodle_text_filter {
      */
     public function filter($text, array $options = array()) {
         global $CFG, $USER, $PAGE; // Since 2.7 we can finally start using globals in filters.
+        require_once($CFG->dirroot . '/course/format/lib.php'); // Needed to ensure course_get_format().
 
         $coursectx = $this->context->get_course_context(false);
         if (!$coursectx) {
