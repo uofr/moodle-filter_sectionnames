@@ -22,9 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die();
 
- function xmldb_filter_sectionnames_install() {
+function xmldb_filter_sectionnames_install() {
      global $DB;
 
- }
+}
