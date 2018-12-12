@@ -24,6 +24,11 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ *
+ * Default will be off.
+ *
+ */
 function xmldb_filter_sectionnames_install() {
      global $DB;
 
