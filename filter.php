@@ -76,10 +76,8 @@ class filter_sectionnames extends moodle_text_filter {
         self::$cacheduserid = (int)$USER->id;
 
         // It may be cached.
-
         if (is_null(self::$sectionslist)) {
             self::$sectionslist = array();
-
             $modinfo = get_fast_modinfo($courseid);
             self::$sectionslist = array(); // We will store all the created filters here.
 
@@ -115,21 +113,27 @@ class filter_sectionnames extends moodle_text_filter {
             // Sort activities by the length of the section name in reverse order.
             core_collator::asort_objects_by_property($sortedsections, 'namelen', core_collator::SORT_NUMERIC);
 
-            // TOFIX: This is an abort issued if buttons or grid format are used.
-            if ($format == "buttons" ||
-                ($format == "grid" && strstr($PAGE->bodyid, "page-course-view"))) {
-                    return $text;
-            }
-
             foreach ($sortedsections as $section) {
                 $title = s(trim(strip_tags($section->name)));
                 $currentname = trim($section->name);
                 $entname  = s($currentname);
                 // Avoid empty or unlinkable activity names.
                 if (!empty($title)) {
-                    $hrefopen = html_writer::start_tag('a',
-                            array('class' => 'autolink', 'title' => $title,
-                                'href' => $section->url));
+                    // Add Grid format compatibility.
+                    if ($format == "grid" && strstr($PAGE->bodyid, "page-course-view")) {
+                        $hrefopen = html_writer::start_tag('a',
+                                array('class' => 'autolink', 'title' => $title,
+                                      'href' => "javascript: M.format_grid.tab(" . $section->id . ")"));
+                    } else if ($format == "buttons" && strstr($PAGE->bodyid, "page-course-view")) {
+                        $hrefopen = html_writer::start_tag('a',
+                                array('class' => 'autolink', 'title' => $title,
+                                      'href' => "javascript: M.format_buttons.show(" . $section->id . "," . $courseid . ")"));
+                    } else {
+                        $hrefopen = html_writer::start_tag('a',
+                                array('class' => 'autolink', 'title' => $title,
+                                      'href' => $section->url));
+                    }
+
                     self::$sectionslist[$section->id] = new filterobject($currentname, $hrefopen, '</a>', false, true);
                     if ($currentname != $entname) {
                         // If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545.
