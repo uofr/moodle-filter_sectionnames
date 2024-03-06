@@ -23,8 +23,6 @@
 
 namespace filter_sectionnames\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for filter_sectionnames implementing null_provider.
  *

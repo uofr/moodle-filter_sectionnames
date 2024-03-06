@@ -25,8 +25,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Section name filtering.
  *
@@ -54,7 +52,7 @@ class filter_sectionnames extends moodle_text_filter {
      * @param array $options The standard filter options passed.
      * @return string Filtered text.
      */
-    public function filter($text, array $options = array()) {
+    public function filter($text, array $options = []) {
         global $CFG, $USER, $PAGE; // Since 2.7 we can finally start using globals in filters.
         require_once($CFG->dirroot . '/course/format/lib.php'); // Needed to ensure course_get_format().
 
@@ -77,12 +75,12 @@ class filter_sectionnames extends moodle_text_filter {
 
         // It may be cached.
         if (is_null(self::$sectionslist)) {
-            self::$sectionslist = array();
+            self::$sectionslist = [];
             $modinfo = get_fast_modinfo($courseid);
-            self::$sectionslist = array(); // We will store all the created filters here.
+            self::$sectionslist = []; // We will store all the created filters here.
 
             // Create array of visible sections sorted by the name length (we are only interested in properties name and url).
-            $sortedsections = array();
+            $sortedsections = [];
 
             if (function_exists('course_get_format')) {
                 $formatinfo = course_get_format($courseid);
@@ -100,12 +98,11 @@ class filter_sectionnames extends moodle_text_filter {
             $section = 1; // Skip the general section 0.
             while ($section <= $numsections) {
                 if (!empty($modinfo->get_section_info($section)) && $modinfo->get_section_info($section)->visible) {
-                    $sortedsections[] = (object)array(
-                        'name' => get_section_name($courseid, $section),
-                        'url' => course_get_url($courseid, $section),
-                        'id' => $section,
-                        'namelen' => -strlen(get_section_name($courseid, $section)), // Negative value for reverse sorting.
-                    );
+                    $sortedsections[] = (object)['name' => get_section_name($courseid, $section),
+                                                 'url' => course_get_url($courseid, $section),
+                                                 'id' => $section,
+                                                 'namelen' => -strlen(get_section_name($courseid, $section)),
+                                                ];
                 }
                 $section++;
             }
@@ -117,38 +114,53 @@ class filter_sectionnames extends moodle_text_filter {
                 $title = s(trim(strip_tags($section->name)));
                 $currentname = trim($section->name);
                 $entname  = s($currentname);
-                // Avoid empty or unlinkable activity names.
+
+                // Avoid empty or unlinkable section title.
                 if (!empty($title)) {
                     // Add Grid format compatibility.
-                    if ($format == "grid" && strstr($PAGE->bodyid, "page-course-view")) {
-                        $hrefopen = html_writer::start_tag('a',
-                                array('class' => 'autolink', 'title' => $title,
-                                      'href' => "javascript: M.format_grid.tab(" . $section->id . ")"));
+                    if ($format == "grid" && $formatinfo->get_format_options()['popup'] && !$PAGE->user_is_editing()) {
+                        $hreftagbegin = html_writer::start_tag('a',
+                            ['class' => 'autolink',
+                             'title' => $title,
+                             'data-toggle' => 'modal',
+                             'data-target' => '#gridPopup',
+                             'data-section' => $section->id,
+                             'onclick' => 'if(jQuery(\'#gridPopup.show\').length) {
+                                                let a = this;
+                                                setTimeout(function() { jQuery(a).trigger(\'click\'); }, 500);
+                                            }',
+                             'href' => $section->url,
+                        ]);
                     } else if ($format == "buttons" && strstr($PAGE->bodyid, "page-course-view")) {
-                        $hrefopen = html_writer::start_tag('a',
-                                array('class' => 'autolink', 'title' => $title,
-                                      'href' => "javascript: M.format_buttons.show(" . $section->id . "," . $courseid . ")"));
+                        $hreftagbegin = html_writer::start_tag('a',
+                            ['class' => 'autolink',
+                            'title' => $title,
+                            'onclick' => 'M.format_buttons.show(' . $section->id . ',' . $courseid . ')',
+                            'href' => $section->url,
+                        ]);
                     } else {
-                        $hrefopen = html_writer::start_tag('a',
-                                array('class' => 'autolink', 'title' => $title,
-                                      'href' => $section->url));
+                        $hreftagbegin = html_writer::start_tag('a',
+                            ['class' => 'autolink',
+                            'title' => $title,
+                            'href' => $section->url,
+                        ]);
                     }
 
-                    self::$sectionslist[$section->id] = new filterobject($currentname, $hrefopen, '</a>', false, true);
+                    self::$sectionslist[$section->id] = new filterobject($currentname, $hreftagbegin, '</a>', false, true);
                     if ($currentname != $entname) {
                         // If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545.
-                        self::$sectionslist[$section->id.'-e'] = new filterobject($entname, $hrefopen, '</a>', false, true);
+                        self::$sectionslist[$section->id.'-e'] = new filterobject($entname, $hreftagbegin, '</a>', false, true);
                     }
                 }
             }
         }
 
-        $filterslist = array();
+        $filterslist = [];
         if (self::$sectionslist) {
             $sectionid = $this->context->instanceid;
             if ($this->context->contextlevel == CONTEXT_MODULE && isset(self::$sectionslist[$sectionid])) {
                 // Remove filterobjects for the current module.
-                $filterslist = array_values(array_diff_key(self::$sectionslist, array($sectionid => 1, $sectionid.'-e' => 1)));
+                $filterslist = array_values(array_diff_key(self::$sectionslist, [$sectionid => 1, $sectionid.'-e' => 1]));
             } else {
                 $filterslist = array_values(self::$sectionslist);
             }
