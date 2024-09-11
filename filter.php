@@ -97,16 +97,17 @@ class filter_sectionnames extends moodle_text_filter {
 
             $section = 1; // Skip the general section 0.
             while ($section <= $numsections) {
-                if (!empty($modinfo->get_section_info($section)) && $modinfo->get_section_info($section)->visible) {
-                    $sortedsections[] = (object)['name' => get_section_name($courseid, $section),
-                                                 'url' => course_get_url($courseid, $section),
-                                                 'id' => $section,
-                                                 'namelen' => -strlen(get_section_name($courseid, $section)),
-                                                ];
+                $info = $modinfo->get_section_info($section);
+                if (!empty($info) && $info->visible) {
+                    $sortedsections[] = (object)[
+                        'name' => get_section_name($courseid, $section),
+                        'url' => new moodle_url('/course/section.php', ['id' => $info->id]),
+                        'id' => $info->id,
+                        'namelen' => -strlen(get_section_name($courseid, $section)),
+                    ];
                 }
                 $section++;
             }
-
             // Sort activities by the length of the section name in reverse order.
             core_collator::asort_objects_by_property($sortedsections, 'namelen', core_collator::SORT_NUMERIC);
 
