@@ -32,7 +32,9 @@
  * @copyright  2017 Matt Davidson
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filter_sectionnames extends moodle_text_filter {
+
+namespace filter_sectionnames;
+class text_filter extends \core_filters\text_filter {
     // Trivial-cache - keyed on $cachedcourseid and $cacheduserid.
     /** @var array section list. */
     public static $sectionslist = null;
@@ -85,7 +87,7 @@ class filter_sectionnames extends moodle_text_filter {
             if (function_exists('course_get_format')) {
                 $formatinfo = course_get_format($courseid);
             } else {
-                $formatinfo = format_base::instance($courseid);
+                $formatinfo = \core_courseformat\base::instance($courseid);
             }
 
             $format = $formatinfo->get_format();
@@ -101,7 +103,7 @@ class filter_sectionnames extends moodle_text_filter {
                 if (!empty($info) && $info->visible) {
                     $sortedsections[] = (object)[
                         'name' => get_section_name($courseid, $section),
-                        'url' => new moodle_url('/course/section.php', ['id' => $info->id]),
+                        'url' => new \moodle_url('/course/section.php', ['id' => $info->id]),
                         'id' => $info->id,
                         'namelen' => -strlen(get_section_name($courseid, $section)),
                     ];
@@ -109,7 +111,7 @@ class filter_sectionnames extends moodle_text_filter {
                 $section++;
             }
             // Sort activities by the length of the section name in reverse order.
-            core_collator::asort_objects_by_property($sortedsections, 'namelen', core_collator::SORT_NUMERIC);
+            \core_collator::asort_objects_by_property($sortedsections, 'namelen', \core_collator::SORT_NUMERIC);
 
             foreach ($sortedsections as $section) {
                 $title = s(trim(strip_tags($section->name)));
@@ -120,7 +122,7 @@ class filter_sectionnames extends moodle_text_filter {
                 if (!empty($title)) {
                     // Add Grid format compatibility.
                     if ($format == "grid" && $formatinfo->get_format_options()['popup'] && !$PAGE->user_is_editing()) {
-                        $hreftagbegin = html_writer::start_tag('a',
+                        $hreftagbegin = \html_writer::start_tag('a',
                             ['class' => 'autolink',
                              'title' => $title,
                              'data-toggle' => 'modal',
@@ -133,24 +135,24 @@ class filter_sectionnames extends moodle_text_filter {
                              'href' => $section->url,
                         ]);
                     } else if ($format == "buttons" && strstr($PAGE->bodyid, "page-course-view")) {
-                        $hreftagbegin = html_writer::start_tag('a',
+                        $hreftagbegin = \html_writer::start_tag('a',
                             ['class' => 'autolink',
                             'title' => $title,
                             'onclick' => 'M.format_buttons.show(' . $section->id . ',' . $courseid . ')',
                             'href' => $section->url,
                         ]);
                     } else {
-                        $hreftagbegin = html_writer::start_tag('a',
+                        $hreftagbegin = \html_writer::start_tag('a',
                             ['class' => 'autolink',
                             'title' => $title,
                             'href' => $section->url,
                         ]);
                     }
 
-                    self::$sectionslist[$section->id] = new filterobject($currentname, $hreftagbegin, '</a>', false, true);
+                    self::$sectionslist[$section->id] = new \filterobject($currentname, $hreftagbegin, '</a>', false, true);
                     if ($currentname != $entname) {
                         // If name has some entity (&amp; &quot; &lt; &gt;) add that filter too. MDL-17545.
-                        self::$sectionslist[$section->id.'-e'] = new filterobject($entname, $hreftagbegin, '</a>', false, true);
+                        self::$sectionslist[$section->id.'-e'] = new \filterobject($entname, $hreftagbegin, '</a>', false, true);
                     }
                 }
             }
